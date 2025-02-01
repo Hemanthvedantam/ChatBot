@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    :root {
+        --primary-red: #ff4d4d;
+        --secondary-gold: #ffd700;
+        --dark-bg: #0a0a0a;
+        --glass-bg: rgba(15, 15, 15, 0.8);
+        --chat-bg: rgba(255, 255, 255, 0.05);
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+                    url('https://wallpaperaccess.com/full/1307429.jpg') center/cover fixed;
+        font-family: 'Arial Rounded MT Bold', sans-serif;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .container {
+        display: flex;
+        height: 100vh;
+        backdrop-filter: blur(5px);
+    }
+
+    /* History Panel - Stark Industries Theme */
+    .history-panel {
+        width: 280px;
+        background: var(--glass-bg);
+        border-right: 1px solid rgba(255, 77, 77, 0.2);
+        padding: 20px;
+        overflow-y: auto;
+        color: white;
+    }
+
+    .panel-title {
+        font-size: 1.5em;
+        color: var(--primary-red);
+        text-align: center;
+        margin-bottom: 25px;
+        text-shadow: 0 0 10px var(--primary-red);
+    }
+
+    #history-list li {
+        padding: 15px;
+        margin: 10px 0;
+        background: var(--chat-bg);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+    }
+
+    #history-list li:hover {
+        border-color: var(--primary-red);
+        transform: translateX(5px);
+    }
+
+    /* Main Chat Window */
+    .chat-window {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 30px;
+        position: relative;
+    }
+
+    .chat-box {
+        flex: 1;
+        background: var(--glass-bg);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border: 1px solid rgba(255, 77, 77, 0.1);
+    }
+
+    /* Messages */
+    .message {
+        max-width: 70%;
+        padding: 15px 20px;
+        border-radius: 15px;
+        position: relative;
+        animation: messageAppear 0.3s ease-out;
+    }
+
+    .user-message {
+        background: linear-gradient(145deg, var(--primary-red), #cc0000);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+    }
+
+    .bot-message {
+        background: var(--glass-bg);
+        color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 5px;
+        border: 1px solid rgba(255, 77, 77, 0.2);
+    }
+
+    /* Input Area */
+    .input-group {
+        display: flex;
+        gap: 15px;
+        background: var(--glass-bg);
+        padding: 15px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 77, 77, 0.2);
+    }
+
+    #user-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 16px;
+        padding: 15px;
+    }
+
+    #user-input:focus {
+        outline: none;
+    }
+
+    .send-btn, .mic-btn {
+        background: linear-gradient(145deg, var(--primary-red), #cc0000);
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .send-btn:hover, .mic-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px var(--primary-red);
+    }
+
+    /* Animations */
+    @keyframes messageAppear {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes typing {
+        0% { opacity: 0.4; }
+        50% { opacity: 1; }
+        100% { opacity: 0.4; }
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 15px;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--primary-red);
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-red);
+        border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .history-panel {
+            width: 100%;
+            height: 200px;
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 77, 77, 0.2);
+        }
+        
+        .container {
+            flex-direction: column;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- History Panel -->
+        <div class="history-panel">
+            <h2 class="panel-title">CHAT HISTORY</h2>
+            <ul id="history-list">
+                <!-- History items will be populated here -->
+            </ul>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-window">
+            <div class="chat-box" id="chat-box">
+                <div class="message bot-message">
+                    Welcome to Hemanth AI Assistant. How can I help you today?
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
+                <button class="mic-btn"><i class="fas fa-microphone"></i></button>
+                <button class="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const micBtn = document.querySelector('.mic-btn');
+        const sendBtn = document.querySelector('.send-btn');
+        const userInput = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const historyList = document.getElementById('history-list');
+        
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                processInput(transcript, 'voice');
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
+            };
+        }
+
+        micBtn.addEventListener('click', () => {
+            if (recognition) {
+                recognition.start();
+            } else {
+                alert("Speech recognition not supported in this browser.");
+            }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            if (userInput.value.trim() !== "") {
+                processInput(userInput.value, 'text');
+                userInput.value = '';
+            }
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && userInput.value.trim() !== "") {
+                processInput(userInput.value, 'text');
+                userInput.value = '';
+            }
+        });
+
+        async function processInput(text, type) {
+            addMessage(text, 'user');
+            updateHistory(text);
+
+            const response = await fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    type: type
+                })
+            });
+
+            const data = await response.json();
+            addMessage(data.response, 'bot');
+            updateHistory(data.response);
+            
+            // Read response aloud
+            const utterance = new SpeechSynthesisUtterance(data.response);
+            speechSynthesis.speak(utterance);
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function updateHistory(text) {
+            const historyItem = document.createElement('li');
+            historyItem.textContent = text;
+            historyItem.onclick = () => {
+                userInput.value = historyItem.textContent;
+            };
+            historyList.appendChild(historyItem);
+        }
+    });
+    </script>
+</body>
+</html>
